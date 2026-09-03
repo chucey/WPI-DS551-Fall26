@@ -56,6 +56,26 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     # YOUR IMPLEMENTATION HERE #
     #                          #
     ############################
+    while True:
+        prev_value_function = value_function.copy()
+
+        for s in range(nS):
+            value_function[s] = sum(
+                policy[s][a]
+                * sum(
+                    probability
+                    * (reward + gamma * prev_value_function[next_state] * (not terminal))
+                    for probability, next_state, reward, terminal in P[s][a]
+                )
+                for a in range(nA)
+            )
+            # a = range(nA)  
+            # value_function[s] = sum(P[s][a][0][2] for a in range(nA)) + gamma * sum(probability * prev_value_function[next_state] for probability, next_state, reward, terminal in P[s][a] if a in range(nA))
+        
+
+        if np.max(np.abs(value_function - prev_value_function)) < tol:
+            break
+
     return value_function 
 
 
