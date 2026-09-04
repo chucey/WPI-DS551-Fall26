@@ -101,6 +101,16 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
 	# YOUR IMPLEMENTATION HERE #
     #                          #
 	############################
+    # policy_stable = True
+    for s in range(nS):
+        # old_action = new_policy[s].copy()
+        new_policy[s] =np.eye(nA)[np.argmax([sum(probability * (reward + gamma * value_from_policy[next_state]) for probability, next_state, reward, terminal in P[s][a]) for a in range(nA)])]
+        # if not np.array_equal(old_action, new_policy[s]):
+        #     policy_stable = False
+
+        #     continue 
+
+        
     return new_policy
 
 
