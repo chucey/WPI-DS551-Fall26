@@ -56,25 +56,16 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     # YOUR IMPLEMENTATION HERE #
     #                          #
     ############################
-    while True:
-        prev_value_function = value_function.copy()
-
+    terminate = False
+    while not terminate:
+        delta = 0
         for s in range(nS):
-            value_function[s] = sum(
-                policy[s][a]
-                * sum(
-                    probability
-                    * (reward + gamma * prev_value_function[next_state] * (not terminal))
-                    for probability, next_state, reward, terminal in P[s][a]
-                )
-                for a in range(nA)
-            )
-            # a = range(nA)  
-            # value_function[s] = sum(P[s][a][0][2] for a in range(nA)) + gamma * sum(probability * prev_value_function[next_state] for probability, next_state, reward, terminal in P[s][a] if a in range(nA))
-        
-
-        if np.max(np.abs(value_function - prev_value_function)) < tol:
-            break
+            v = value_function[s]
+            value_function[s] = sum(policy[s][a] * sum(probability * (reward + gamma * value_function[next_state] * (not terminal)) for probability, next_state, reward, terminal in P[s][a]) for a in range(nA))
+            delta = max(delta, abs(v - value_function[s]))
+        if delta < tol:
+            terminate = True
+    
 
     return value_function 
 
@@ -101,16 +92,16 @@ def policy_improvement(P, nS, nA, value_from_policy, gamma=0.9):
 	# YOUR IMPLEMENTATION HERE #
     #                          #
 	############################
-    # policy_stable = True
+
     for s in range(nS):
-        # old_action = new_policy[s].copy()
-        new_policy[s] =np.eye(nA)[np.argmax([sum(probability * (reward + gamma * value_from_policy[next_state]) for probability, next_state, reward, terminal in P[s][a]) for a in range(nA)])]
-        # if not np.array_equal(old_action, new_policy[s]):
-        #     policy_stable = False
-
-        #     continue 
-
+        # Calculate the action values for each action in state s
+        action_values = np.zeros(nA)
+        for a in range(nA):
+            action_values[a] = sum(probability * (reward + gamma * value_from_policy[next_state]) for probability, next_state, reward, terminal in P[s][a])
         
+        # Find the best action(s) and update the policy
+        best_action = np.argmax(action_values)
+        new_policy[s] = np.eye(nA)[best_action]  # Set the best action to 1 and others to 0
     return new_policy
 
 
@@ -133,10 +124,19 @@ def policy_iteration(P, nS, nA, policy, gamma=0.9, tol=1e-8):
     V: np.ndarray[nS]
     """
     new_policy = policy.copy()
+    
 	############################
 	# YOUR IMPLEMENTATION HERE #
     #                          #
 	############################
+    
+    while True:
+        V = policy_evaluation(P, nS, nA, new_policy, gamma, tol)
+        updated_policy = policy_improvement(P, nS, nA, V, gamma)
+        if np.array_equal(updated_policy, new_policy):
+            break
+        new_policy = updated_policy
+
     return new_policy, V
 
 def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
@@ -163,6 +163,24 @@ def value_iteration(P, nS, nA, V, gamma=0.9, tol=1e-8):
     # YOUR IMPLEMENTATION HERE #
     #                          #
     ############################
+    terminate = False
+    while not terminate:
+        delta = 0
+        for s in range(nS):
+            v = V_new[s]
+            V_new[s] = max(sum(probability * (reward + gamma * V_new[next_state] * (not terminal)) for probability, next_state, reward, terminal in P[s][a]) for a in range(nA))
+            delta = max(delta, abs(v - V_new[s]))
+        if delta < tol:
+            terminate = True
+
+    # After convergence, derive the policy from the value function
+    for s in range(nS):
+        action_values = np.zeros(nA)
+        for a in range(nA):
+            action_values[a] = sum(probability * (reward + gamma * V_new[next_state] * (not terminal)) for probability, next_state, reward, terminal in P[s][a])
+        best_action = np.argmax(action_values)
+        policy_new[s] = np.eye(nA)[best_action]  # Set the best action to 1 and others to 0
+
     return policy_new, V_new
 
 def render_single(env, policy, render = False, n_episodes=100):
@@ -194,6 +212,12 @@ def render_single(env, policy, render = False, n_episodes=100):
             # YOUR IMPLEMENTATION HERE #
             #                          #
             ############################
+            action = np.argmax(policy[ob]) # pick the action with the highest probability
+            ob, reward, terminated, truncated, info = env.step(action) # take the action
+            done = terminated or truncated # check if the episode is over
+            total_rewards += reward # accumulate the reward
+    env.close() # close the environment
+
             
     return total_rewards
 
