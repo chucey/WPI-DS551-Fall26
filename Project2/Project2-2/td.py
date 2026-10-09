@@ -39,6 +39,12 @@ def epsilon_greedy(Q, state, nA, epsilon = 0.1):
     """
     ############################
     # YOUR IMPLEMENTATION HERE #
+    action_values = Q[state]
+    best_action = np.argmax(action_values)
+    if random.random() < epsilon:
+        action = random.randint(0, nA - 1)
+    else:
+        action = best_action
     #                          #
     ############################
     return action
@@ -75,6 +81,25 @@ def sarsa(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
     
     ############################
     # YOUR IMPLEMENTATION HERE #
+    for episode in range(n_episodes):
+        state, _ = env.reset()
+        action = epsilon_greedy(Q, state, env.action_space.n, epsilon)
+        
+        done = False
+        while not done:
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated or truncated
+            
+            next_action = epsilon_greedy(Q, next_state, env.action_space.n, epsilon)
+            
+            # Update Q value using SARSA update rule
+            Q[state][action] += alpha * (reward + gamma * Q[next_state][next_action] - Q[state][action])
+            
+            state = next_state
+            action = next_action
+            
+        # Decay epsilon
+        epsilon *= 0.99
     #                          #
     ############################
     return Q
@@ -107,6 +132,23 @@ def q_learning(env, n_episodes, gamma=1.0, alpha=0.5, epsilon=0.1):
     
     ############################
     # YOUR IMPLEMENTATION HERE #
+    for episode in range(n_episodes):
+        state, _ = env.reset()
+        done = False
+        
+        while not done:
+            action = epsilon_greedy(Q, state, env.action_space.n, epsilon)
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated or truncated
+            
+            # Update Q value using Q-learning update rule
+            best_next_action = np.argmax(Q[next_state])
+            Q[state][action] += alpha * (reward + gamma * Q[next_state][best_next_action] - Q[state][action])
+            
+            state = next_state
+            
+        # Decay epsilon
+        epsilon *= 0.99
     #                          #
     ############################
     return Q
