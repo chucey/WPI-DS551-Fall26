@@ -57,7 +57,7 @@ class Agent_DQN(Agent):
         self.target_q_net.load_state_dict(self.q_net.state_dict())
         self.target_q_net.eval()
 
-        self.model_path = 'model/dqn_model.pth'
+        self.model_path = 'dqn_model.pth'
 
         self.lr = 0.0001
         self.loss_fn = torch.nn.HuberLoss()
