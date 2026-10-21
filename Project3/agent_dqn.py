@@ -45,6 +45,11 @@ class Agent_DQN(Agent):
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
+
+        print(f"Using device: {self.device}")
+        print(f"PyTorch version: {torch.__version__}")
+        print(f'Files in directory: {os.listdir(os.getcwd())}')
+        
         
         # neural net initialization
         self.args = args
@@ -57,7 +62,9 @@ class Agent_DQN(Agent):
         self.target_q_net.load_state_dict(self.q_net.state_dict())
         self.target_q_net.eval()
 
-        self.model_path = 'dqn_model.pth'
+        self.model_path = os.path.join(os.getcwd(), "save_model",'dqn_model.pth')
+        print(f'Model path: {self.model_path}')
+        print(f"Model found: {os.path.exists(self.model_path)}")
 
         self.lr = 0.0001
         self.loss_fn = torch.nn.HuberLoss()
@@ -182,43 +189,12 @@ class Agent_DQN(Agent):
         # YOUR IMPLEMENTATION HERE #
         
         buffer_batch = random.sample(self.buffer, self.batch_size)
-        # states, actions, rewards, next_states, dones = zip(*buffer_batch)
-        # states = torch.FloatTensor(states).to(self.device)
-        # actions = torch.LongTensor(actions).unsqueeze(1).to(self.device)
-        # rewards = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)
-        # next_states = torch.FloatTensor(next_states).to(self.device)
-        # dones = torch.FloatTensor(dones).unsqueeze(1).to(self.device)
+       
   
         ###########################
         return buffer_batch
 
-    # def explore_env(self, n_episodes=1000):
-    #     """
-    #     collect data from the enviroment. Essentially, get episodes and store then. An episode ends when the game is over.
 
-    #     Each episode is list of tuples (state, action, reward, next_state, done). Each tuple is a step in the episode.
-
-    #     The next episode is a new list and starts when the game is reset. The game is reset when the agent loses all its lives or when the game is won. 
-    #     """
-    #     ###########################
-    #     # YOUR IMPLEMENTATION HERE #
-    #     episodes = [] # list of episodes, each episode is a list of tuples (state, action, reward, next_state, done)
-    #     time_steps = [] # time_steps in each episode, each time step is a tuple (state, action, reward, next_state, done) 
-
-    #     state = self.env.reset()
-    #     for _ in range(n_episodes):
-    #         done = False
-    #         while not done:
-    #             action = self.make_action(state, test=True)
-    #             next_state, reward, done, truncated, _ = self.env.step(action)
-    #             done = done or truncated
-    #             time_steps.append((state, action, reward, next_state, done))
-    #             episodes.append(time_steps)
-    #             state = next_state
-    #         state = self.env.reset()  # Reset the environment for the next episode
-    #         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)  # Decay epsilon after each episode
-        
-        ###########################
 
     def plot_training_curve(self, avg_reward, time_steps):
         """
