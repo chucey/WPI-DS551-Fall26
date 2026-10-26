@@ -9,5 +9,5 @@
 #SBATCH --mem 12G
 #SBATCH --job-name="P3"
 
-source activate myenv
+conda activate RL_HW!
 python main.py --train_dqn
